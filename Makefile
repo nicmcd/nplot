@@ -20,3 +20,4 @@ count:
 test:
 	PYTHONPATH=. ./examples/simple_multilineplot.py
 	PYTHONPATH=. ./examples/simple_multibarplot.py
+	PYTHONPATH=. ./examples/simple_multiscatterplot.py

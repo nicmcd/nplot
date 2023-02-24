@@ -36,7 +36,9 @@ from .consts import *
 
 from .plot_line_style import PlotLineStyle
 from .plot_bar_style import PlotBarStyle
+from .plot_scatter_style import PlotScatterStyle
 from .grid_style import GridStyle
 from .figure_size import FigureSize
 from .multiline_plot import MultilinePlot
 from .multibar_plot import MultibarPlot
+from .multiscatter_plot import MultiscatterPlot
