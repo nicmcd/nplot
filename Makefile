@@ -10,7 +10,7 @@ install:
 	python3 setup.py install --user
 
 clean:
-	rm -rf build dist $(PYPKG).egg-info $(PYPKG)/*.pyc $(PYPKG)/__pycache__
+	rm -rf build dist $(PYPKG).egg-info $(PYPKG)/*.pyc $(PYPKG)/__pycache__ *.png
 
 count:
 	@wc $(PYPKG)/*.py | sort -n -k1

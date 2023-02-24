@@ -29,7 +29,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
 """
 
-__version__ = '2.0.0'
+__version__ = '2.1.0'
 
 from .utils import *
 from .consts import *
