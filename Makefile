@@ -18,6 +18,6 @@ count:
 	@echo "commits : "$(shell git rev-list HEAD --count) 
 
 test:
-	PYTHONPATH=. ./examples/simple_multilineplot.py
-	PYTHONPATH=. ./examples/simple_multibarplot.py
-	PYTHONPATH=. ./examples/simple_multiscatterplot.py
+	PYTHONPATH=. ./examples/line.py
+	PYTHONPATH=. ./examples/bar.py
+	PYTHONPATH=. ./examples/scatter.py

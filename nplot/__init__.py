@@ -39,6 +39,6 @@ from .plot_bar_style import PlotBarStyle
 from .plot_scatter_style import PlotScatterStyle
 from .grid_style import GridStyle
 from .figure_size import FigureSize
-from .multiline_plot import MultilinePlot
-from .multibar_plot import MultibarPlot
-from .multiscatter_plot import MultiscatterPlot
+from .line_plot import LinePlot
+from .bar_plot import BarPlot
+from .scatter_plot import ScatterPlot

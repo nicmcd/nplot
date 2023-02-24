@@ -33,7 +33,7 @@ import math
 import numbers
 import nplot
 
-class MultiscatterPlot(object):
+class ScatterPlot(object):
   """
   This class create plots with multiple scatters from similar data.
   """
@@ -223,13 +223,13 @@ class MultiscatterPlot(object):
   def set(self, **kwargs):
     for k in kwargs:
       value = kwargs[k]
-      func = MultiscatterPlot._kwargs[k]
+      func = ScatterPlot._kwargs[k]
       func(self, value)
 
   @staticmethod
   def add_args(parser, *skip):
     for s in skip:
-      assert s in MultiscatterPlot._kwargs.keys(), 'bad skip: {}'.format(s)
+      assert s in ScatterPlot._kwargs.keys(), 'bad skip: {}'.format(s)
     if 'plot_style' not in skip:
       parser.add_argument('--plot_style', type=str,
                           choices=nplot.PlotScatterStyle.styles(),
@@ -316,7 +316,7 @@ class MultiscatterPlot(object):
 
   def apply_args(self, args, *skip):
     for s in skip:
-      assert s in MultiscatterPlot._kwargs.keys()
+      assert s in ScatterPlot._kwargs.keys()
     if 'plot_style' not in skip and args.plot_style != None:
       self.set_plot_style(args.plot_style)
     if 'figure_size' not in skip and args.figure_size != None:
@@ -548,30 +548,30 @@ class MultiscatterPlot(object):
     self._plt.close(fig)
 
 
-MultiscatterPlot._kwargs = {
-  'plot_style': MultiscatterPlot.set_plot_style,
-  'figure_size': MultiscatterPlot.set_figure_size,
-  'title': MultiscatterPlot.set_title,
-  'xlabel': MultiscatterPlot.set_xlabel,
-  'ylabel': MultiscatterPlot.set_ylabel,
-  'data_labels': MultiscatterPlot.set_data_labels,
-  'xmin': MultiscatterPlot.set_xmin,
-  'xmax': MultiscatterPlot.set_xmax,
-  'ymin': MultiscatterPlot.set_ymin,
-  'ymax': MultiscatterPlot.set_ymax,
-  'xauto_frame': MultiscatterPlot.set_xauto_frame,
-  'yauto_frame': MultiscatterPlot.set_yauto_frame,
-  'xgrid': MultiscatterPlot.set_xgrid,
-  'ygrid': MultiscatterPlot.set_ygrid,
-  'xmajor_ticks': MultiscatterPlot.set_xmajor_ticks,
-  'xminor_ticks': MultiscatterPlot.set_xminor_ticks,
-  'ymajor_ticks': MultiscatterPlot.set_ymajor_ticks,
-  'yminor_ticks': MultiscatterPlot.set_yminor_ticks,
-  'legend_location': MultiscatterPlot.set_legend_location,
-  'legend_columns': MultiscatterPlot.set_legend_columns,
-  'legend_title': MultiscatterPlot.set_legend_title,
-  'xscale': MultiscatterPlot.set_xscale,
-  'yscale': MultiscatterPlot.set_yscale,
-  'xticklabels_verbose': MultiscatterPlot.set_xticklabels_verbose,
-  'yticklabels_verbose': MultiscatterPlot.set_yticklabels_verbose
+ScatterPlot._kwargs = {
+  'plot_style': ScatterPlot.set_plot_style,
+  'figure_size': ScatterPlot.set_figure_size,
+  'title': ScatterPlot.set_title,
+  'xlabel': ScatterPlot.set_xlabel,
+  'ylabel': ScatterPlot.set_ylabel,
+  'data_labels': ScatterPlot.set_data_labels,
+  'xmin': ScatterPlot.set_xmin,
+  'xmax': ScatterPlot.set_xmax,
+  'ymin': ScatterPlot.set_ymin,
+  'ymax': ScatterPlot.set_ymax,
+  'xauto_frame': ScatterPlot.set_xauto_frame,
+  'yauto_frame': ScatterPlot.set_yauto_frame,
+  'xgrid': ScatterPlot.set_xgrid,
+  'ygrid': ScatterPlot.set_ygrid,
+  'xmajor_ticks': ScatterPlot.set_xmajor_ticks,
+  'xminor_ticks': ScatterPlot.set_xminor_ticks,
+  'ymajor_ticks': ScatterPlot.set_ymajor_ticks,
+  'yminor_ticks': ScatterPlot.set_yminor_ticks,
+  'legend_location': ScatterPlot.set_legend_location,
+  'legend_columns': ScatterPlot.set_legend_columns,
+  'legend_title': ScatterPlot.set_legend_title,
+  'xscale': ScatterPlot.set_xscale,
+  'yscale': ScatterPlot.set_yscale,
+  'xticklabels_verbose': ScatterPlot.set_xticklabels_verbose,
+  'yticklabels_verbose': ScatterPlot.set_yticklabels_verbose
 }

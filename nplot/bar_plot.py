@@ -30,12 +30,12 @@
 """
 import matplotlib.ticker
 import math
-import numbers
+import numpy
 import nplot
 
-class MultilinePlot(object):
+class BarPlot(object):
   """
-  This class create plots with multiple lines from similar data.
+  This class create plots with multiple bar from similar data.
   """
 
   _kwargs = {}
@@ -44,72 +44,43 @@ class MultilinePlot(object):
     """
     This constructs default plot information
     """
-    for ydata in ydatas:
-      assert len(xdata) == len(ydata)
 
-    self._x_min_val = None
-    self._x_max_val = None
-    for xval in xdata:
-      if isinstance(xval, numbers.Number):
-        assert not math.isnan(xval), 'xdata can not contain NaN'
-      if self._x_min_val is None or xval < self._x_min_val:
-        self._x_min_val = xval
-      if self._x_max_val is None or xval > self._x_max_val:
-        self._x_max_val = xval
-    if self._x_min_val == None:
-      self._x_min_val = 0
-    if self._x_max_val == None:
-      self._x_max_val = 1
-
-    self._y_min_val = None
-    self._y_max_val = None
-    for ydata in ydatas:
-      for yval in ydata:
-        if not math.isnan(yval):
-          if self._y_min_val is None or yval < self._y_min_val:
-            self._y_min_val = yval
-          if self._y_max_val is None or yval > self._y_max_val:
-            self._y_max_val = yval
-    if self._y_min_val == None:
-      self._y_min_val = 0
-    if self._y_max_val == None:
-      self._y_max_val = 1
+    self._num_sets = len(xdata)
+    assert self._num_sets > 0, 'must have at least one bar set'
+    self._num_bars = len(ydatas)
+    assert self._num_bars > 0, 'each bar set must have at least one bar'
+    for ydata in ydatas[1:]:
+      assert len(ydata) == self._num_sets, 'improper ydata length of {}'.format(
+        len(ydata))
 
     self._plt = plt
     self._xdata = xdata
     self._ydatas = ydatas
-    self._num_lines = len(self._ydatas)
 
-    self._plot_style = nplot.PlotLineStyle.default()
+    self._plot_style = nplot.PlotBarStyle.default()
     self._figure_size = nplot.FigureSize.parse(nplot.FigureSize.default())
     self._title = None
     self._xlabel = None
     self._ylabel = None
     self._data_labels = None
-    self._xmin = None
-    self._xmax = None
+    self._label_bars = True
+    self._bar_label_precision = 2
     self._ymin = None
     self._ymax = None
-    self._xauto_frame = 0.0
     self._yauto_frame = 0.0
-    self._xgrid = True
     self._ygrid = True
     self._grid_style = nplot.GridStyle.default()
-    self._xmajor_ticks = None
-    self._xminor_ticks = None
     self._ymajor_ticks = None
     self._yminor_ticks = None
     self._legend_location = 'upper left'
     self._legend_columns = 1
     self._legend_title = None
-    self._xscale = None
     self._yscale = None
-    self._xticklabels_verbose = False
     self._yticklabels_verbose = False
 
   def set_plot_style(self, value):
-    assert value in nplot.PlotLineStyle.styles(), \
-      'plot line style "{}" not found'.format(value)
+    assert value in nplot.PlotBarStyle.styles(), \
+      'plot bar style "{}" not found'.format(value)
     self._plot_style = value
 
   def set_figure_size(self, value):
@@ -125,18 +96,15 @@ class MultilinePlot(object):
     self._ylabel = value
 
   def set_data_labels(self, value):
-    assert len(value) == self._num_lines
+    assert len(value) == self._num_bars
     self._data_labels = value
 
-  def set_xmin(self, value):
-    self._xmin = value
+  def set_label_bars(self, value):
+    self._label_bars = bool(value)
 
-  def set_xmax(self, value):
-    self._xmax = value
-
-  def set_xlimits(self, xmin, xmax):
-    self.set_xmin(xmin)
-    self.set_xmax(xmax)
+  def set_bar_label_precision(self, value):
+    assert value >= 0, 'bar label precision must be >= 0'
+    self._bar_label_precision = value
 
   def set_ymin(self, value):
     self._ymin = value
@@ -144,18 +112,8 @@ class MultilinePlot(object):
   def set_ymax(self, value):
     self._ymax = value
 
-  def set_ylimits(self, ymin, ymax):
-    self.set_ymin(ymin)
-    self.set_ymax(ymax)
-
-  def set_xauto_frame(self, value):
-    self._xauto_frame = value
-
   def set_yauto_frame(self, value):
     self._yauto_frame = value
-
-  def set_xgrid(self, value):
-    self._xgrid = bool(value)
 
   def set_ygrid(self, value):
     self._ygrid = bool(value)
@@ -163,20 +121,6 @@ class MultilinePlot(object):
   def set_grid_style(self, value):
     assert value in nplot.GridStyle.styles()
     self._grid_style = value
-
-  def set_xmajor_ticks(self, value):
-    if value == None:
-      self._xmajor_ticks = None
-    else:
-      assert value > 0
-      self._xmajor_ticks = value
-
-  def set_xminor_ticks(self, value):
-    if value == None:
-      self._xminor_ticks = None
-    else:
-      assert value > 0
-      self._xminor_ticks = value
 
   def set_ymajor_ticks(self, value):
     if value == None:
@@ -202,14 +146,8 @@ class MultilinePlot(object):
   def set_legend_title(self, value):
     self._legend_title = value
 
-  def set_xscale(self, value):
-    self._xscale = value
-
   def set_yscale(self, value):
     self._yscale = value
-
-  def set_xticklabels_verbose(self, value):
-    self._xticklabels_verbose = bool(value)
 
   def set_yticklabels_verbose(self, value):
     self._yticklabels_verbose = bool(value)
@@ -217,17 +155,17 @@ class MultilinePlot(object):
   def set(self, **kwargs):
     for k in kwargs:
       value = kwargs[k]
-      func = MultilinePlot._kwargs[k]
+      func = BarPlot._kwargs[k]
       func(self, value)
 
   @staticmethod
   def add_args(parser, *skip):
     for s in skip:
-      assert s in MultilinePlot._kwargs.keys(), 'bad skip: {}'.format(s)
+      assert s in BarPlot._kwargs.keys(), 'bad skip: {}'.format(s)
     if 'plot_style' not in skip:
       parser.add_argument('--plot_style', type=str,
-                          choices=nplot.PlotLineStyle.styles(),
-                          help='the style of the plot lines')
+                          choices=nplot.PlotBarStyle.styles(),
+                          help='the style of the plot bars')
     if 'figure_size' not in skip:
       parser.add_argument('--figure_size',
                           type=nplot.FigureSize.parse,
@@ -244,27 +182,21 @@ class MultilinePlot(object):
     if 'data_labels' not in skip:
       parser.add_argument('--data_labels', type=str, action='append',
                           help='the label of the data (give all or no labels)')
-    if 'xmin' not in skip:
-      parser.add_argument('--xmin', type=float, default=None,
-                          help='the minimum value of the x-axis')
-    if 'xmax' not in skip:
-      parser.add_argument('--xmax', type=float, default=None,
-                          help='the maximum value of the x-axis')
+    if 'label_bars' not in skip:
+      parser.add_argument('--label_bars', type=nplot.str_to_bool,
+                          help='whether or not to label bars')
+    if 'bar_label_precision' not in skip:
+      parser.add_argument('--bar_label_precision', type=int,
+                          help='set bar label precision')
     if 'ymin' not in skip:
       parser.add_argument('--ymin', type=float, default=None,
                           help='the minimum value of the y-axis')
     if 'ymax' not in skip:
       parser.add_argument('--ymax', type=float, default=None,
                           help='the maximum value of the y-axis')
-    if 'xauto_frame' not in skip:
-      parser.add_argument('--xauto_frame', type=float,
-                          help='percent of area to frame the x-axis')
     if 'yauto_frame' not in skip:
       parser.add_argument('--yauto_frame', type=float,
                           help='percent of area to frame the y-axis')
-    if 'xgrid' not in skip:
-      parser.add_argument('--xgrid', type=nplot.str_to_bool,
-                          help='whether or not to enable the x-axis grid')
     if 'ygrid' not in skip:
       parser.add_argument('--ygrid', type=nplot.str_to_bool,
                           help='whether or not to enable the y-axis grid')
@@ -272,12 +204,6 @@ class MultilinePlot(object):
       parser.add_argument('--grid_style', type=str,
                           choices=nplot.GridStyle.styles(),
                           help='the style of the grid')
-    if 'xmajor_ticks' not in skip:
-      parser.add_argument('--xmajor_ticks', type=int,
-                          help='number of x-axis major ticks')
-    if 'xminor_ticks' not in skip:
-      parser.add_argument('--xminor_ticks', type=int,
-                          help='number of x-axis minor ticks')
     if 'ymajor_ticks' not in skip:
       parser.add_argument('--ymajor_ticks', type=int,
                           help='number of y-axis major ticks')
@@ -293,16 +219,9 @@ class MultilinePlot(object):
     if 'legend_title' not in skip:
       parser.add_argument('--legend_title', type=str,
                           help='the title of the legend')
-    if 'xscale' not in skip:
-      parser.add_argument('--xscale', type=str,
-                          help='the scale of the x-axis')
     if 'yscale' not in skip:
       parser.add_argument('--yscale', type=str,
                           help='the scale of the y-axis')
-    if 'xticklabels_verbose' not in skip:
-      parser.add_argument('--xticklabels_verbose', type=nplot.str_to_bool,
-                          help='whether or not to turn x-axis ticklabels '
-                          'verbose')
     if 'yticklabels_verbose' not in skip:
       parser.add_argument('--yticklabels_verbose', type=nplot.str_to_bool,
                           help='whether or not to turn y-axis ticklabels '
@@ -310,7 +229,7 @@ class MultilinePlot(object):
 
   def apply_args(self, args, *skip):
     for s in skip:
-      assert s in MultilinePlot._kwargs.keys()
+      assert s in BarPlot._kwargs.keys()
     if 'plot_style' not in skip and args.plot_style != None:
       self.set_plot_style(args.plot_style)
     if 'figure_size' not in skip and args.figure_size != None:
@@ -323,28 +242,21 @@ class MultilinePlot(object):
       self.set_ylabel(args.ylabel)
     if 'data_labels' not in skip and args.data_labels != None:
       self.set_data_labels(args.data_labels)
-    if 'xmin' not in skip and args.xmin != None:
-      self.set_xmin(args.xmin)
-    if 'xmax' not in skip and args.xmax != None:
-      self.set_xmax(args.xmax)
+    if 'label_bars' not in skip and args.label_bars != None:
+      self.set_label_bars(args.label_bars)
+    if ('bar_label_precision' not in skip and
+        args.bar_label_precision != None):
+      self.set_bar_label_precision(args.bar_label_precision)
     if 'ymin' not in skip and args.ymin != None:
       self.set_ymin(args.ymin)
     if 'ymax' not in skip and args.ymax != None:
       self.set_ymax(args.ymax)
-    if 'xauto_frame' not in skip and args.xauto_frame != None:
-      self.set_xauto_frame(args.xauto_frame)
     if 'yauto_frame' not in skip and args.yauto_frame != None:
       self.set_yauto_frame(args.yauto_frame)
-    if 'xgrid' not in skip and args.xgrid != None:
-      self.set_xgrid(args.xgrid)
     if 'ygrid' not in skip and args.ygrid != None:
       self.set_ygrid(args.ygrid)
     if 'grid_style' not in skip and args.grid_style != None:
       self.set_grid_style(args.grid_style)
-    if 'xmajor_ticks' not in skip and args.xmajor_ticks != None:
-      self.set_xmajor_ticks(args.xmajor_ticks)
-    if 'xminor_ticks' not in skip and args.xminor_ticks != None:
-      self.set_xminor_ticks(args.xminor_ticks)
     if 'ymajor_ticks' not in skip and args.ymajor_ticks != None:
       self.set_ymajor_ticks(args.ymajor_ticks)
     if 'yminor_ticks' not in skip and args.yminor_ticks != None:
@@ -355,13 +267,8 @@ class MultilinePlot(object):
       self.set_legend_columns(args.legend_columns)
     if 'legend_title' not in skip and args.legend_title != None:
       self.set_legend_title(args.legend_title)
-    if 'xscale' not in skip and args.xscale != None:
-      self.set_xscale(args.xscale)
     if 'yscale' not in skip and args.yscale != None:
       self.set_yscale(args.yscale)
-    if ('xticklabels_verbose' not in skip and
-        args.xticklabels_verbose != None):
-      self.set_xticklabels_verbose(args.xticklabels_verbose)
     if ('yticklabels_verbose' not in skip and
         args.yticklabels_verbose != None):
       self.set_yticklabels_verbose(args.yticklabels_verbose)
@@ -371,71 +278,52 @@ class MultilinePlot(object):
     fig = self._plt.figure(figsize=self._figure_size)
     ax = fig.add_subplot(1, 1, 1)
 
-    # create a PlotLineStyle object
-    ps = nplot.PlotLineStyle(self._plot_style, self._plt, self._num_lines)
+    # create a PlotBarStyle object
+    ps = nplot.PlotBarStyle(self._plot_style, self._plt, self._num_bars)
 
     # compute plot bounds
-    if len(self._xdata) > 0:
-      xmin = self._xmin
-      xmax = self._xmax
-      ymin = self._ymin
-      ymax = self._ymax
-      if xmin == None:
-        xmin = self._x_min_val
-      if xmax == None:
-        xmax = self._x_max_val
-      if ymin == None:
-        ymin = self._y_min_val #min(map(min, self._ydatas))
-      if ymax == None:
-        ymax = self._y_max_val #max(map(max, self._ydatas))
-    else :
-      xmin = 0
-      xmax = 1
-      ymin = 0
-      ymax = 1
+    ymin = self._ymin
+    ymax = self._ymax
+    if ymin == None:
+      ymin = min(map(min, self._ydatas))
+    if ymax == None:
+      ymax = max(map(max, self._ydatas))
 
-    for limit in [xmin, xmax, ymin, ymax]:
-      assert limit != None
-      if isinstance(limit, numbers.Number):
-        assert not math.isnan(limit)
-
-    xspan = xmax - xmin
     yspan = ymax - ymin
-    xmin -= (xspan * self._xauto_frame)
-    xmax += (xspan * self._xauto_frame)
     ymin -= (yspan * self._yauto_frame)
     ymax += (yspan * self._yauto_frame)
-    xspan = xmax - xmin
     yspan = ymax - ymin
 
-    # figure out where markers should be placed (target 20 markers)
-    if len(self._xdata) > 1 and isinstance(xspan, numbers.Number):
-      mark_every = math.ceil(
-        (int(xspan) / (self._xdata[1] - self._xdata[0])) / 20)
+    # determine base locations
+    set_locs = numpy.arange(self._num_sets)
+    if self._num_bars == 1 or self._num_sets == 1:
+      # butt bars against each other
+      span = 1.0
     else:
-      mark_every = 1
+      # provide a spacing between sets
+      span = self._num_bars / (self._num_bars + 1)
+    bar_width = span / self._num_bars
 
-    # plot the lines
-    if len(self._xdata) > 0:
-      for idx, ydata in enumerate(self._ydatas):
-        # retrieve the plot style info
-        style = ps[idx]
+    # set bar set ticks and labels
+    ax.set_xticks(set_locs)
+    ax.set_xticklabels([str(x) for x in self._xdata])
 
-        # create line
-        line = ax.plot(self._xdata,
-                       ydata,
-                       color=style['color'],
-                       linestyle=style['line_style'],
-                       linewidth=style['line_width'],
-                       marker=style['marker_style'],
-                       markersize=style['marker_size'],
-                       markevery=mark_every)[0]
+    # plot the bars
+    bar_sets = []
+    for idx, ydata in enumerate(self._ydatas):
+      # retrieve the plot style info
+      style = ps[idx]
 
-        # set line label
-        if self._data_labels != None:
-          line.set_label(self._data_labels[idx])
-    else:
-      nplot.empty_text(ax, (xmax - xmin) / 2, (ymax - ymin) / 2)
+      # create bars for this set
+      bar_sets.append(ax.bar(
+        set_locs - ((bar_width * self._num_bars) / 2) + (idx * bar_width),
+        ydata,
+        bar_width,
+        align='edge',
+        color=style['color'],
+        edgecolor=style['edgecolor'],
+        ecolor=style['ecolor'],
+        hatch=style['hatch']))
 
     # set title
     if self._title != None:
@@ -448,40 +336,51 @@ class MultilinePlot(object):
       ax.set_ylabel(self._ylabel)
 
     # create legend
-    if len(self._xdata) > 0 and self._data_labels != None:
-      ax.legend(
-        loc=self._legend_location,
-        ncol=self._legend_columns, title=self._legend_title,
-        fancybox=True, facecolor='white', edgecolor='black',
-        framealpha=1.0)
+    if self._data_labels != None:
+      ax.legend((bar_set[0] for bar_set in bar_sets), self._data_labels,
+                loc=self._legend_location, ncol=self._legend_columns,
+                title=self._legend_title, fancybox=True, facecolor='white',
+                edgecolor='black', framealpha=1.0)
+
+    # determine if the bar labels can be int or need to be float
+    use_int = True
+    for bar_set in bar_sets:
+      for bar in bar_set:
+        height = bar.get_height()
+        if isinstance(height, numpy.int64) or isinstance(height, int):
+          continue
+        elif isinstance(height, numpy.int64) or isinstance(height, float):
+          if not height.is_integer():
+            use_int = False
+            break
+        else:
+          assert False, f'New type detected: {type(height)}'
+
+    # add value labels
+    if self._label_bars:
+      for bar_set in bar_sets:
+        for bar in bar_set:
+          height = bar.get_height()
+          if use_int:
+            bar_label = '{}'.format(int(height))
+          else:
+            fmt = '{{:.{}f}}'.format(self._bar_label_precision)
+            bar_label = fmt.format(float(height))
+          ax.text(bar.get_x() + bar.get_width() / 2.0, height,
+                  bar_label, ha='center', va='bottom')
 
     # set plot bounds
-    ax.set_xlim(xmin, xmax)
     ax.set_ylim(ymin, ymax)
 
     # grid
     grid_kwargs = nplot.GridStyle.style(self._grid_style)
-    if self._xgrid:
-      ax.xaxis.grid(True, **grid_kwargs)
-    else:
-      ax.xaxis.grid(False, **grid_kwargs)
     if self._ygrid:
       ax.yaxis.grid(True, **grid_kwargs)
     else:
-      ax.yaxis.grid(False, **grid_kwargs)
+      ax.yaxis.grid(False)
     ax.set_axisbelow(True)
 
     # set axis scales
-    xlog = False
-    if self._xscale != None:
-      if self._xscale == 'log':
-        xlog = True
-        ax.set_xscale('log')
-      elif self._xscale.startswith('log'):
-        xlog = True
-        ax.set_xscale('log', base=int(self._xscale[3:]))
-      else:
-        ax.set_xscale(self._xscale)
     ylog = False
     if self._yscale != None:
       if self._yscale == 'log':
@@ -494,28 +393,12 @@ class MultilinePlot(object):
         ax.set_yscale(self._yscale)
 
     # default ticks
-    if self._xmajor_ticks is None and not xlog:
-      self._xmajor_ticks = 10
-    if self._xminor_ticks is None and not xlog:
-      self._xminor_ticks = 20
     if self._ymajor_ticks is None and not ylog:
       self._ymajor_ticks = 10
     if self._yminor_ticks is None and not ylog:
       self._yminor_ticks = 20
 
     # set ticks
-    if self._xmajor_ticks != None:
-      if xlog:
-        raise ValueError('you can\'t set xmajor ticks with a logarithmic '
-                         'x-axis')
-      ax.xaxis.set_major_locator(
-        matplotlib.ticker.MaxNLocator(self._xmajor_ticks))
-    if self._xminor_ticks != None:
-      if xlog:
-        raise ValueError('you can\'t set xminor ticks with a logarithmic '
-                         'x-axis')
-      ax.xaxis.set_minor_locator(
-        matplotlib.ticker.MaxNLocator(self._xminor_ticks))
     if self._ymajor_ticks != None:
       if ylog:
         raise ValueError('you can\'t set ymajor ticks with a logarithmic '
@@ -530,9 +413,6 @@ class MultilinePlot(object):
         matplotlib.ticker.MaxNLocator(self._yminor_ticks))
 
     # verbose tick labels
-    if self._xticklabels_verbose:
-      ax.xaxis.set_major_formatter(matplotlib.ticker.ScalarFormatter())
-      ax.ticklabel_format(axis='x', style='plain', useOffset=False)
     if self._yticklabels_verbose:
       ax.yaxis.set_major_formatter(matplotlib.ticker.ScalarFormatter())
       ax.ticklabel_format(axis='y', style='plain', useOffset=False)
@@ -543,30 +423,25 @@ class MultilinePlot(object):
     self._plt.close(fig)
 
 
-MultilinePlot._kwargs = {
-  'plot_style': MultilinePlot.set_plot_style,
-  'figure_size': MultilinePlot.set_figure_size,
-  'title': MultilinePlot.set_title,
-  'xlabel': MultilinePlot.set_xlabel,
-  'ylabel': MultilinePlot.set_ylabel,
-  'data_labels': MultilinePlot.set_data_labels,
-  'xmin': MultilinePlot.set_xmin,
-  'xmax': MultilinePlot.set_xmax,
-  'ymin': MultilinePlot.set_ymin,
-  'ymax': MultilinePlot.set_ymax,
-  'xauto_frame': MultilinePlot.set_xauto_frame,
-  'yauto_frame': MultilinePlot.set_yauto_frame,
-  'xgrid': MultilinePlot.set_xgrid,
-  'ygrid': MultilinePlot.set_ygrid,
-  'xmajor_ticks': MultilinePlot.set_xmajor_ticks,
-  'xminor_ticks': MultilinePlot.set_xminor_ticks,
-  'ymajor_ticks': MultilinePlot.set_ymajor_ticks,
-  'yminor_ticks': MultilinePlot.set_yminor_ticks,
-  'legend_location': MultilinePlot.set_legend_location,
-  'legend_columns': MultilinePlot.set_legend_columns,
-  'legend_title': MultilinePlot.set_legend_title,
-  'xscale': MultilinePlot.set_xscale,
-  'yscale': MultilinePlot.set_yscale,
-  'xticklabels_verbose': MultilinePlot.set_xticklabels_verbose,
-  'yticklabels_verbose': MultilinePlot.set_yticklabels_verbose
+BarPlot._kwargs = {
+  'plot_style': BarPlot.set_plot_style,
+  'figure_size': BarPlot.set_figure_size,
+  'title': BarPlot.set_title,
+  'xlabel': BarPlot.set_xlabel,
+  'ylabel': BarPlot.set_ylabel,
+  'data_labels': BarPlot.set_data_labels,
+  'label_bars': BarPlot.set_label_bars,
+  'bar_label_precision': BarPlot.set_bar_label_precision,
+  'ymin': BarPlot.set_ymin,
+  'ymax': BarPlot.set_ymax,
+  'yauto_frame': BarPlot.set_yauto_frame,
+  'ygrid': BarPlot.set_ygrid,
+  'grid_style': BarPlot.set_grid_style,
+  'ymajor_ticks': BarPlot.set_ymajor_ticks,
+  'yminor_ticks': BarPlot.set_yminor_ticks,
+  'legend_location': BarPlot.set_legend_location,
+  'legend_columns': BarPlot.set_legend_columns,
+  'legend_title': BarPlot.set_legend_title,
+  'yscale': BarPlot.set_yscale,
+  'yticklabels_verbose': BarPlot.set_yticklabels_verbose
 }
