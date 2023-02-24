@@ -134,7 +134,7 @@ class MultilinePlot(object):
   def set_xmax(self, value):
     self._xmax = value
 
-  def set_xlimts(self, xmin, xmax):
+  def set_xlimits(self, xmin, xmax):
     self.set_xmin(xmin)
     self.set_xmax(xmax)
 
@@ -144,7 +144,7 @@ class MultilinePlot(object):
   def set_ymax(self, value):
     self._ymax = value
 
-  def set_ylimts(self, ymin, ymax):
+  def set_ylimits(self, ymin, ymax):
     self.set_ymin(ymin)
     self.set_ymax(ymax)
 
