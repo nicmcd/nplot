@@ -47,19 +47,23 @@ class LinePlot(object):
     for ydata in ydatas:
       assert len(xdata) == len(ydata)
 
+    self._x_is_labels = (
+      len(xdata) > 0 and all(isinstance(xval, str) for xval in xdata))
+
     self._x_min_val = None
     self._x_max_val = None
-    for xval in xdata:
-      if isinstance(xval, numbers.Number):
-        assert not math.isnan(xval), 'xdata can not contain NaN'
-      if self._x_min_val is None or xval < self._x_min_val:
-        self._x_min_val = xval
-      if self._x_max_val is None or xval > self._x_max_val:
-        self._x_max_val = xval
-    if self._x_min_val == None:
-      self._x_min_val = 0
-    if self._x_max_val == None:
-      self._x_max_val = 1
+    if not self._x_is_labels:
+      for xval in xdata:
+        if isinstance(xval, numbers.Number):
+          assert not math.isnan(xval), 'xdata can not contain NaN'
+        if self._x_min_val is None or xval < self._x_min_val:
+          self._x_min_val = xval
+        if self._x_max_val is None or xval > self._x_max_val:
+          self._x_max_val = xval
+      if self._x_min_val == None:
+        self._x_min_val = 0
+      if self._x_max_val == None:
+        self._x_max_val = 1
 
     self._y_min_val = None
     self._y_max_val = None
@@ -374,42 +378,55 @@ class LinePlot(object):
     # create a PlotLineStyle object
     ps = nplot.PlotLineStyle(self._plot_style, self._plt, self._num_lines)
 
-    # compute plot bounds
-    if len(self._xdata) > 0:
+    # compute plot X bounds
+    if self._x_is_labels:
+      assert self._xmin == None
+      assert self._xmax == None
+    else:
       xmin = self._xmin
       xmax = self._xmax
-      ymin = self._ymin
-      ymax = self._ymax
-      if xmin == None:
-        xmin = self._x_min_val
-      if xmax == None:
-        xmax = self._x_max_val
+      if len(self._xdata) > 0:
+        if xmin == None:
+          xmin = self._x_min_val
+        if xmax == None:
+          xmax = self._x_max_val
+      else :
+        xmin = 0
+        xmax = 1
+      for limit in [xmin, xmax]:
+        assert limit != None
+        if isinstance(limit, numbers.Number):
+          assert not math.isnan(limit)
+      xspan = xmax - xmin
+      xmin -= (xspan * self._xauto_frame)
+      xmax += (xspan * self._xauto_frame)
+      xspan = xmax - xmin
+
+    # compute plot Y bounds
+    ymin = self._ymin
+    ymax = self._ymax
+    if len(self._xdata) > 0:
       if ymin == None:
         ymin = self._y_min_val #min(map(min, self._ydatas))
       if ymax == None:
         ymax = self._y_max_val #max(map(max, self._ydatas))
     else :
-      xmin = 0
-      xmax = 1
       ymin = 0
       ymax = 1
-
-    for limit in [xmin, xmax, ymin, ymax]:
+    for limit in [ymin, ymax]:
       assert limit != None
       if isinstance(limit, numbers.Number):
         assert not math.isnan(limit)
-
-    xspan = xmax - xmin
     yspan = ymax - ymin
-    xmin -= (xspan * self._xauto_frame)
-    xmax += (xspan * self._xauto_frame)
     ymin -= (yspan * self._yauto_frame)
     ymax += (yspan * self._yauto_frame)
-    xspan = xmax - xmin
     yspan = ymax - ymin
 
-    # figure out where markers should be placed (target 20 markers)
-    if len(self._xdata) > 1 and isinstance(xspan, numbers.Number):
+    # figure out where markers should be placed
+    if self._x_is_labels:
+      mark_every = 1
+    elif len(self._xdata) > 1 and isinstance(xspan, numbers.Number):
+      # target 20 markers
       mark_every = math.ceil(
         (int(xspan) / (self._xdata[1] - self._xdata[0])) / 20)
     else:
@@ -456,7 +473,8 @@ class LinePlot(object):
         framealpha=1.0)
 
     # set plot bounds
-    ax.set_xlim(xmin, xmax)
+    if not self._x_is_labels:
+      ax.set_xlim(xmin, xmax)
     ax.set_ylim(ymin, ymax)
 
     # grid
@@ -474,6 +492,7 @@ class LinePlot(object):
     # set axis scales
     xlog = False
     if self._xscale != None:
+      assert not self._x_is_labels, 'Can\'t use xscale with labels for xdata'
       if self._xscale == 'log':
         xlog = True
         ax.set_xscale('log')
@@ -493,29 +512,35 @@ class LinePlot(object):
       else:
         ax.set_yscale(self._yscale)
 
-    # default ticks
-    if self._xmajor_ticks is None and not xlog:
-      self._xmajor_ticks = 10
-    if self._xminor_ticks is None and not xlog:
-      self._xminor_ticks = 20
+    # default X ticks
+    if not self._x_is_labels:
+      if self._xmajor_ticks is None and not xlog:
+        self._xmajor_ticks = 10
+      if self._xminor_ticks is None and not xlog:
+        self._xminor_ticks = 20
+
+      # set X ticks
+    if not self._x_is_labels:
+      if self._xmajor_ticks != None:
+        if xlog:
+          raise ValueError('you can\'t set xmajor ticks with a logarithmic '
+                           'x-axis')
+        ax.xaxis.set_major_locator(
+          matplotlib.ticker.MaxNLocator(self._xmajor_ticks))
+      if self._xminor_ticks != None:
+        if xlog:
+          raise ValueError('you can\'t set xminor ticks with a logarithmic '
+                           'x-axis')
+        ax.xaxis.set_minor_locator(
+          matplotlib.ticker.MaxNLocator(self._xminor_ticks))
+
+    # default Y ticks
     if self._ymajor_ticks is None and not ylog:
       self._ymajor_ticks = 10
     if self._yminor_ticks is None and not ylog:
       self._yminor_ticks = 20
 
-    # set ticks
-    if self._xmajor_ticks != None:
-      if xlog:
-        raise ValueError('you can\'t set xmajor ticks with a logarithmic '
-                         'x-axis')
-      ax.xaxis.set_major_locator(
-        matplotlib.ticker.MaxNLocator(self._xmajor_ticks))
-    if self._xminor_ticks != None:
-      if xlog:
-        raise ValueError('you can\'t set xminor ticks with a logarithmic '
-                         'x-axis')
-      ax.xaxis.set_minor_locator(
-        matplotlib.ticker.MaxNLocator(self._xminor_ticks))
+    # set Y ticks
     if self._ymajor_ticks != None:
       if ylog:
         raise ValueError('you can\'t set ymajor ticks with a logarithmic '
@@ -529,10 +554,12 @@ class LinePlot(object):
       ax.yaxis.set_minor_locator(
         matplotlib.ticker.MaxNLocator(self._yminor_ticks))
 
-    # verbose tick labels
+    # verbose X tick labels
     if self._xticklabels_verbose:
       ax.xaxis.set_major_formatter(matplotlib.ticker.ScalarFormatter())
       ax.ticklabel_format(axis='x', style='plain', useOffset=False)
+
+    # verbose Y tick labels
     if self._yticklabels_verbose:
       ax.yaxis.set_major_formatter(matplotlib.ticker.ScalarFormatter())
       ax.ticklabel_format(axis='y', style='plain', useOffset=False)

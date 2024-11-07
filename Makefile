@@ -1,7 +1,8 @@
 PYPKG := nplot
+TESTS := $(wildcard ./examples/*.py)
 
 .SUFFIXES:
-.PHONY: help install clean
+.PHONY: help install clean count test
 
 help:
 	@echo "options are: install clean"
@@ -18,6 +19,7 @@ count:
 	@echo "commits : "$(shell git rev-list HEAD --count) 
 
 test:
-	PYTHONPATH=. ./examples/line.py
-	PYTHONPATH=. ./examples/bar.py
-	PYTHONPATH=. ./examples/scatter.py
+	@for script in $(TESTS); do \
+		echo "Running $$script..."; \
+		PYTHONPATH=. ./$$script; \
+	done
